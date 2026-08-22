@@ -1,0 +1,11 @@
+# Render 정적 사이트(Static Site) 배포 설정
+services:
+  - type: web
+    name: physics-freefall-simulation
+    env: static
+    buildCommand: ""
+    staticPublishPath: "./"
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>물리 & 수학 탐구실: 자유낙하 및 포물선 운동 시뮬레이터</title>
+  <meta name="description" content="고등학생을 위한 물리학(자유낙하, 포물선 운동)과 수학(이차함수) 연계 학습 인터랙티브 웹 시뮬레이션">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <!-- KaTeX for beautiful math equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <!-- Chart.js for math graph rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-area">
+        <span class="badge">고등 물리 & 수학 인터랙티브 랩</span>
+        <h1>자유낙하 & 포물선 운동 탐구</h1>
+      </div>
+      <div class="header-desc">
+        <p>💡 <strong>핵심 물리 원리:</strong> 진공 상태(공기 저항이 없는 공간)에서 물체의 낙하 속도와 운동 궤적은 <strong>질량과 무관하게 동일</strong>합니다.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- SECTION 1: 상단 자유낙하 무한 반복 챔버 -->
+    <section class="card intro-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🌌</span>
+          <h2>진공 챔버 자유낙하 실험 (무한 반복 시연)</h2>
+        </div>
+        <span class="tag">질량 무관성 증명</span>
+      </div>
+      <div class="intro-grid">
+        <div class="canvas-wrapper intro-canvas-container">
+          <canvas id="introCanvas" width="800" height="280"></canvas>
+          <div class="intro-overlay-info">
+            <div class="object-tag tag-feather">🪶 깃털 (10g)</div>
+            <div class="object-tag tag-ball">🏐 쇠구슬 (5,000g)</div>
+          </div>
+        </div>
+        <div class="intro-explanation">
+          <h3>📌 왜 두 물체는 동시에 바닥에 떨어질까요?</h3>
+          <div class="math-card">
+            <p>뉴턴의 운동 제2법칙과 만유인력에 의해:</p>
+            <div id="intro-math-eq" class="katex-eq"></div>
+            <p class="summary-highlight">즉, <strong>가속도 <em>a</em> = <em>g</em> = 9.8 m/s²</strong>로 질량(<em>m</em>)과 무관하게 항상 일정합니다!</p>
+          </div>
+          <div class="intro-controls">
+            <button id="btnToggleSlowIntro" class="btn btn-secondary btn-sm">🐢 슬로우 모션 전환</button>
+            <button id="btnResetIntro" class="btn btn-secondary btn-sm">🔄 다시 시작</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: 파라미터 제어 및 투사체 설정 -->
+    <section class="card control-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">⚙️</span>
+          <h2>포물선 운동 시뮬레이션 파라미터 설정</h2>
+        </div>
+        <span class="tag" style="background: rgba(6, 182, 212, 0.18); color: #38bdf8; border-color: rgba(6, 182, 212, 0.35);">
+          모든 투사체 공통 각도 & 속도 적용
+        </span>
+      </div>
+
+      <div class="config-panel">
+        <!-- 공통 파라미터 영역 (발사각, 초기속도, 투사체 수, 중력) -->
+        <div class="global-inputs">
+          <div class="input-group">
+            <label for="inputLaunchAngle">
+              <strong>공통 발사각 (θ)</strong>
+              <span class="hint">(5° ~ 85°)</span>
+            </label>
+            <div class="slider-input-pair">
+              <input type="range" id="sliderLaunchAngle" min="5" max="85" value="45" step="1">
+              <input type="number" id="inputLaunchAngle" min="5" max="85" value="45">
+              <span class="unit">°</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="inputInitialVelocity">
+              <strong>공통 초기속도 (v₀)</strong>
+              <span class="hint">(5 ~ 60 m/s)</span>
+            </label>
+            <div class="slider-input-pair">
+              <input type="range" id="sliderInitialVelocity" min="5" max="60" value="25" step="1">
+              <input type="number" id="inputInitialVelocity" min="5" max="60" value="25">
+              <span class="unit">m/s</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="inputNumProjectiles">
+              <strong>투사체 수</strong>
+              <span class="hint">(1 ~ 5개)</span>
+            </label>
+            <div class="slider-input-pair">
+              <input type="range" id="sliderNumProjectiles" min="1" max="5" value="3" step="1">
+              <input type="number" id="inputNumProjectiles" min="1" max="5" value="3">
+              <span class="unit">개</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="selectGravity">
+              <strong>중력가속도 (<em>g</em>)</strong>
+            </label>
+            <select id="selectGravity" class="select-box">
+              <option value="9.8" selected>지구 (9.80 m/s²)</option>
+              <option value="1.62">달 (1.62 m/s²)</option>
+              <option value="3.71">화성 (3.71 m/s²)</option>
+              <option value="24.79">목성 (24.79 m/s²)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 각 투사체별 질량(m) 설정 카드 컨테이너 -->
+        <div class="projectiles-section-header">
+          <h3>⚖️ 투사체별 질량(m) 개별 설정 (서로 다른 질량 비교)</h3>
+          <span class="sub-hint">질량이 완전히 달라도 궤적과 비행 시간이 동일함을 직접 확인해 보세요!</span>
+        </div>
+        <div class="projectiles-container" id="projectilesCardsContainer">
+          <!-- JS로 투사체 질량 카드 렌더링 -->
+        </div>
+
+        <div class="action-bar">
+          <button id="btnLaunch" class="btn btn-primary btn-lg">
+            <span class="btn-icon">🚀</span> 시뮬레이션 발사!
+          </button>
+          <button id="btnPause" class="btn btn-outline" disabled>
+            <span class="btn-icon">⏸️</span> 일시정지
+          </button>
+          <button id="btnReset" class="btn btn-outline">
+            <span class="btn-icon">🔄</span> 초기화
+          </button>
+          <div class="speed-toggle">
+            <span>재생 속도:</span>
+            <button class="btn-speed" data-speed="0.25">0.25x</button>
+            <button class="btn-speed" data-speed="0.5">0.5x</button>
+            <button class="btn-speed active" data-speed="1.0">1.0x</button>
+            <button class="btn-speed" data-speed="2.0">2.0x</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: 메인 시뮬레이션 캔버스 (물리 애니메이션) -->
+    <section class="card simulation-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">🎯</span>
+          <h2>실시간 포물선 비행 시뮬레이션</h2>
+        </div>
+        <div class="canvas-toggles">
+          <label class="toggle-label mode-badge-label">
+            <input type="checkbox" id="toggleSplitView"> 
+            <span class="highlight-text">✨ 궤적 나란히 분리 보기 (오프셋 뷰)</span>
+          </label>
+          <label class="toggle-label"><input type="checkbox" id="toggleVectors" checked> 속도 벡터 (<em>v<sub>x</sub></em>, <em>v<sub>y</sub></em>)</label>
+          <label class="toggle-label"><input type="checkbox" id="toggleTrail" checked> 궤적 잔상 유지</label>
+          <label class="toggle-label"><input type="checkbox" id="toggleGrid" checked> 좌표 그리드</label>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper sim-canvas-wrapper">
+        <canvas id="simCanvas" width="1100" height="480"></canvas>
+        <div class="sim-telemetry" id="simTelemetry">
+          <div class="telemetry-item">비행 시간: <span id="teleTime">0.00</span> s</div>
+        </div>
+      </div>
+
+      <!-- 실시간 결과 데이터 테이블 -->
+      <div class="results-table-container">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>투사체</th>
+              <th>발사각(θ)</th>
+              <th>초기속도(v₀)</th>
+              <th>질량(m)</th>
+              <th>최고점 높이(H)</th>
+              <th>수평 도달거리(R)</th>
+              <th>총 체공시간(T)</th>
+              <th>궤적 일치 분석</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+            <!-- JS 데이터 바인딩 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: 수학적 분석 및 이차함수 그래프 -->
+    <section class="card math-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span class="icon">📈</span>
+          <h2>수학적 탐구: 포물선 운동과 이차함수 (<em>y = ax² + bx + c</em>)</h2>
+        </div>
+        <span class="tag">수학 & 물리 융합</span>
+      </div>
+
+      <div class="math-grid">
+        <div class="math-derivations">
+          <div class="formula-box">
+            <h3>1. 시간(<em>t</em>)에 대한 매개변수 위치 방정식</h3>
+            <p>수평 방향 (등속도 운동 <em>a<sub>x</sub> = 0</em>):</p>
+            <div id="eq-x-t" class="katex-eq"></div>
+            <p>수직 방향 (등가속도 운동 <em>a<sub>y</sub> = -g</em>):</p>
+            <div id="eq-y-t" class="katex-eq"></div>
+          </div>
+
+          <div class="formula-box highlight-box">
+            <h3>2. 시간(<em>t</em>) 소거 → 궤적의 이차함수 방정식</h3>
+            <p><em>t = x / (v₀ cosθ)</em> 를 수직 위치 식에 대입하면:</p>
+            <div id="eq-trajectory" class="katex-eq"></div>
+            <div class="math-insight">
+              <p>🔍 <strong>핵심 발견:</strong> 위 유도식에 <strong>질량(<em>m</em>) 항이 전혀 존재하지 않습니다!</strong><br>즉, 질량이 10g이든 5,000g이든 발사각(<em>θ</em>)과 초기속도(<em>v₀</em>)가 같다면 <strong>완벽히 동일한 이차함수 궤적</strong>을 그립니다.</p>
+            </div>
+          </div>
+
+          <div class="formula-box">
+            <h3>3. 이차함수 특징 분석 (꼭짓점과 <em>x</em>절편)</h3>
+            <div id="eq-features" class="katex-eq"></div>
+          </div>
+        </div>
+
+        <div class="graph-container">
+          <div class="graph-header">
+            <h3>수학 좌표계 이차함수 곡선 그래프</h3>
+            <span class="sub-hint">데카르트 좌표계 xy 평면 매핑</span>
+          </div>
+          <div class="chart-box">
+            <canvas id="mathChart"></canvas>
+          </div>
+          <div id="quadraticEquationList" class="equation-legend">
+            <!-- 투사체별 유도된 실제 이차함수 식 목록 -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>🎓 <strong>고등학교 물리 I & 수학 I 연계 시뮬레이션</strong> | Render Static Hosting 호환</p>
+      <p class="copyright">Developed for intuitive Physics & Mathematics education.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
