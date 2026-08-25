@@ -211,14 +211,14 @@ class App {
       }
 
       tr.innerHTML = `
-        <td style="color:${p.color.hex}; font-weight:700">#${p.id}</td>
-        <td>${p.angleDeg}°</td>
-        <td>${p.v0} m/s</td>
-        <td>${p.mass >= 1000 ? (p.mass / 1000).toFixed(1) + ' kg' : p.mass + ' g'}</td>
-        <td>${p.maxHeight.toFixed(2)} m</td>
-        <td>${p.range.toFixed(2)} m</td>
-        <td>${p.totalTime.toFixed(2)} s</td>
-        <td>${badgeHtml}</td>
+        <td data-label="투사체" style="color:${p.color.hex}; font-weight:700">#${p.id}</td>
+        <td data-label="발사각(θ)">${p.angleDeg}°</td>
+        <td data-label="초기속도(v₀)">${p.v0} m/s</td>
+        <td data-label="질량(m)">${p.mass >= 1000 ? (p.mass / 1000).toFixed(1) + ' kg' : p.mass + ' g'}</td>
+        <td data-label="최고점 높이(H)">${p.maxHeight.toFixed(2)} m</td>
+        <td data-label="수평 도달거리(R)">${p.range.toFixed(2)} m</td>
+        <td data-label="총 체공시간(T)">${p.totalTime.toFixed(2)} s</td>
+        <td data-label="궤적 일치 분석">${badgeHtml}</td>
       `;
       tbody.appendChild(tr);
     });

@@ -567,6 +567,7 @@ input[type="number"]:focus, .select-box:focus {
 .results-table-container {
   margin-top: 16px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .results-table {
@@ -582,12 +583,14 @@ input[type="number"]:focus, .select-box:focus {
   font-weight: 600;
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
 }
 
 .results-table td {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .match-badge {
@@ -744,5 +747,82 @@ input[type="number"]:focus, .select-box:focus {
   }
   .app-header h1 {
     font-size: 1.35rem;
+  }
+}
+
+/* Mobile Portrait Optimization (≤ 640px) */
+@media (max-width: 640px) {
+  .card {
+    padding: 16px 12px;
+  }
+
+  .app-header {
+    padding: 16px 12px;
+  }
+
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .header-desc {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+  }
+
+  .sim-canvas-wrapper {
+    height: 320px;
+  }
+
+  /* 모바일 반응형 카드형 테이블 전환 */
+  .results-table thead {
+    display: none; /* 모바일 세로모드에서 복잡한 헤더 숨김 */
+  }
+
+  .results-table, 
+  .results-table tbody, 
+  .results-table tr, 
+  .results-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .results-table tr {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .results-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+
+  .results-table td:last-child {
+    border-bottom: none;
+    padding-top: 10px;
+  }
+
+  .results-table td::before {
+    content: attr(data-label);
+    font-family: var(--font-main);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    margin-right: 12px;
+  }
+
+  .results-table td[data-label="투사체"] {
+    font-size: 1rem;
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 }
