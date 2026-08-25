@@ -285,11 +285,12 @@ body {
 .slider-input-pair {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 input[type="range"] {
   flex: 1;
+  min-width: 60px;
   accent-color: var(--accent-blue);
   height: 6px;
   background: rgba(255, 255, 255, 0.15);
@@ -301,19 +302,21 @@ input[type="number"], .select-box {
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
-  width: 75px;
+  font-size: 0.88rem;
+  width: 58px;
   outline: none;
   transition: border-color 0.2s;
+  text-align: right;
 }
 
 .select-box {
   width: 100%;
   font-family: var(--font-main);
   cursor: pointer;
+  text-align: left;
 }
 
 input[type="number"]:focus, .select-box:focus {
@@ -321,15 +324,18 @@ input[type="number"]:focus, .select-box:focus {
 }
 
 .unit {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  min-width: 25px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-weight: 500;
+  width: 28px;
+  text-align: left;
+  flex-shrink: 0;
 }
 
 /* Projectile cards grid */
 .projectiles-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -338,7 +344,7 @@ input[type="number"]:focus, .select-box:focus {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 16px;
   position: relative;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
@@ -351,7 +357,7 @@ input[type="number"]:focus, .select-box:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -381,24 +387,30 @@ input[type="number"]:focus, .select-box:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
 .field-label {
   font-size: 0.82rem;
   color: var(--text-secondary);
-  min-width: 90px;
+  width: 105px;
+  flex-shrink: 0;
   white-space: nowrap;
 }
 
 .field-row .slider-input-pair {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
 }
 
 .field-row input[type="number"] {
-  width: 65px;
+  width: 58px;
   padding: 4px 6px;
   font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 /* Action Bar */
@@ -756,6 +768,15 @@ input[type="number"]:focus, .select-box:focus {
     padding: 16px 12px;
   }
 
+  .projectiles-container {
+    grid-template-columns: 1fr;
+  }
+
+  .field-label {
+    width: 90px;
+    font-size: 0.78rem;
+  }
+
   .app-header {
     padding: 16px 12px;
   }
@@ -775,7 +796,7 @@ input[type="number"]:focus, .select-box:focus {
 
   /* 모바일 반응형 카드형 테이블 전환 */
   .results-table thead {
-    display: none; /* 모바일 세로모드에서 복잡한 헤더 숨김 */
+    display: none;
   }
 
   .results-table, 
