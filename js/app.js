@@ -86,7 +86,7 @@ class App {
 
       const card = document.createElement('div');
       card.className = 'proj-card';
-      card.style.borderTop = `3px solid ${color.hex}`;
+      card.style.borderLeft = `4px solid ${color.hex}`;
 
       card.innerHTML = `
         <div class="proj-card-header">
