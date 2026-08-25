@@ -97,12 +97,12 @@ export class MathGraphManager {
         points.push({ x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) });
       }
 
-      // 선 굵기 및 대시 패턴을 투사체별로 차별화하여 겹칠 때도 여러 개가 존재함을 명확히 인지 가능
-      const borderWidth = 3 + (trajectoriesData.length - idx) * 1.2;
+      const borderWidth = 3 + (trajectoriesData.length - idx) * 0.8;
       const borderDash = idx === 0 ? [] : (idx === 1 ? [6, 4] : (idx === 2 ? [3, 3] : [8, 3, 2, 3]));
 
+      const massText = props.mass >= 1000 ? (props.mass/1000).toFixed(1)+'kg' : props.mass+'g';
       return {
-        label: `투사체 #${props.id} (${props.mass >= 1000 ? (props.mass/1000).toFixed(1)+'kg' : props.mass+'g'})`,
+        label: `투사체 #${props.id} (${props.angleDeg}°, ${props.v0}m/s, ${massText})`,
         data: points,
         borderColor: props.color.hex,
         backgroundColor: props.color.hex,
@@ -132,10 +132,11 @@ export class MathGraphManager {
       const aStr = props.quadA.toFixed(4);
       const bStr = Math.abs(props.quadB).toFixed(3);
       const sign = props.quadB >= 0 ? '+' : '-';
+      const massText = props.mass >= 1000 ? (props.mass/1000).toFixed(1)+'kg' : props.mass+'g';
 
       item.innerHTML = `
         <div>
-          <strong style="color:${props.color.hex}">#${props.id} ($m=${props.mass}g$):</strong> 
+          <strong style="color:${props.color.hex}">#${props.id} (${props.angleDeg}°, ${props.v0}m/s, ${massText}):</strong> 
           <span style="color:#f8fafc">y = ${aStr}x² ${sign} ${bStr}x</span>
         </div>
         <div style="font-size:0.78rem; color:#94a3b8">

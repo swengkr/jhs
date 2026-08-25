@@ -171,13 +171,13 @@ export class SimulationCanvas {
 
     const count = this.trajectoriesData.length;
 
-    // 2. 투사체별 궤적 잔상 그리기 (겹침 방지 선 굵기 및 대시 패턴 차별화)
+    // 2. 투사체별 궤적 잔상 그리기
     this.trajectoriesData.forEach((props, idx) => {
       const offsetPx = this.splitView ? (idx - (count - 1) / 2) * 16 : 0;
       this.drawTrajectoryLine(ctx, props, idx, offsetPx);
     });
 
-    // 3. 투사체 본체 및 라벨 렌더링 (동심원 계층 구조 & 툴팁 카드)
+    // 3. 투사체 본체 및 라벨 렌더링
     this.drawProjectilesGroup(ctx);
 
     // 4. 발사대 (대포/원점)
@@ -273,7 +273,6 @@ export class SimulationCanvas {
       ctx.strokeStyle = props.color.hex;
       ctx.shadowColor = props.color.glow;
       ctx.shadowBlur = 6;
-      // 인덱스에 따라 선 굵기 및 대시 패턴을 약간씩 다르게 하여 겹쳐도 층이 보이게 처리
       ctx.lineWidth = 3 + (this.trajectoriesData.length - idx) * 0.8;
 
       ctx.beginPath();
@@ -294,74 +293,92 @@ export class SimulationCanvas {
     const count = this.trajectoriesData.length;
     if (!count) return;
 
-    const baseProps = this.trajectoriesData[0];
-    const currentT = Math.min(this.currentTime, baseProps.totalTime);
-    const isCompleted = this.currentTime >= baseProps.totalTime;
+    // 모든 투사체의 각도 및 속도가 같은지 검사
+    const first = this.trajectoriesData[0];
+    const isAllIdenticalMotion = this.trajectoriesData.every(
+      p => Math.abs(p.angleDeg - first.angleDeg) < 0.001 && Math.abs(p.v0 - first.v0) < 0.001
+    );
 
-    // 1. 최고점 / 낙하지점 공통 마커
-    const peakWorld = {
-      x: baseProps.v0x * baseProps.timePeak,
-      y: baseProps.maxHeight
-    };
-    const peakScr = this.worldToScreen(peakWorld.x, peakWorld.y);
+    // 1. 최고점 및 착지 마커
+    this.trajectoriesData.forEach((props) => {
+      const currentT = Math.min(this.currentTime, props.totalTime);
+      const isCompleted = this.currentTime >= props.totalTime;
 
-    if (currentT >= baseProps.timePeak) {
-      ctx.fillStyle = '#fcd34d';
-      ctx.beginPath();
-      ctx.arc(peakScr.x, peakScr.y, 4, 0, Math.PI * 2);
-      ctx.fill();
+      // 최고점 마커
+      if (currentT >= props.timePeak) {
+        const peakWorld = {
+          x: props.v0x * props.timePeak,
+          y: props.maxHeight
+        };
+        const peakScr = this.worldToScreen(peakWorld.x, peakWorld.y);
+        ctx.fillStyle = props.color.hex;
+        ctx.beginPath();
+        ctx.arc(peakScr.x, peakScr.y, 4, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = '#fcd34d';
-      ctx.font = 'bold 11px Pretendard, sans-serif';
-      ctx.fillText(`★ 최고점 H = ${baseProps.maxHeight.toFixed(1)}m (모든 투사체 공통)`, peakScr.x - 60, peakScr.y - 12);
-    }
+        if (count <= 3 || isAllIdenticalMotion) {
+          ctx.fillStyle = props.color.hex;
+          ctx.font = 'bold 10px Pretendard, sans-serif';
+          const label = isAllIdenticalMotion && props.id !== 1 ? '' : `★ #${props.id} H=${props.maxHeight.toFixed(1)}m`;
+          if (label) {
+            ctx.fillText(label, peakScr.x - 30, peakScr.y - 8);
+          }
+        }
+      }
 
-    if (isCompleted) {
-      const landScr = this.worldToScreen(baseProps.range, 0);
-      ctx.fillStyle = '#34d399';
-      ctx.beginPath();
-      ctx.arc(landScr.x, landScr.y, 6, 0, Math.PI * 2);
-      ctx.fill();
+      // 착지 마커
+      if (isCompleted) {
+        const landScr = this.worldToScreen(props.range, 0);
+        ctx.fillStyle = props.color.hex;
+        ctx.beginPath();
+        ctx.arc(landScr.x, landScr.y, 5, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 12px Pretendard, sans-serif';
-      ctx.fillText(`🚩 동시 착지! R = ${baseProps.range.toFixed(1)}m (체공 ${baseProps.totalTime.toFixed(2)}s)`, landScr.x - 50, landScr.y + 20);
-    }
+        if (count <= 3 || isAllIdenticalMotion) {
+          ctx.fillStyle = props.color.hex;
+          ctx.font = 'bold 10px Pretendard, sans-serif';
+          const label = isAllIdenticalMotion && props.id !== 1 ? '' : `🚩 #${props.id} R=${props.range.toFixed(1)}m (${props.totalTime.toFixed(2)}s)`;
+          if (label) {
+            ctx.fillText(label, landScr.x - 35, landScr.y + 18);
+          }
+        }
+      }
+    });
 
     // 2. 투사체 본체 렌더링
-    // 질량이 큰 투사체를 바깥쪽 큰 링으로, 질량이 작은 투사체를 안쪽 코어로 겹쳐서 다채로운 동심원 형태로 렌더링
-    // 분리 뷰(splitView)일 때는 각각 오프셋된 위치에 독립 렌더링
-    if (this.splitView) {
+    if (this.splitView || !isAllIdenticalMotion) {
+      // 궤적이 다르거나 분리 뷰인 경우: 각각 개별 위치에 렌더링
       this.trajectoriesData.forEach((props, idx) => {
-        const offsetPx = (idx - (count - 1) / 2) * 16;
+        const offsetPx = this.splitView ? (idx - (count - 1) / 2) * 16 : 0;
+        const currentT = Math.min(this.currentTime, props.totalTime);
         const currentPos = PhysicsEngine.getPositionAtTime(props, currentT);
         const scrPos = this.worldToScreen(currentPos.x, currentPos.y, offsetPx);
         this.drawSingleProjectile(ctx, props, scrPos, currentPos, idx);
       });
     } else {
-      // 겹침 합체 모드: 동심원 링(Concentric Halo Circles) + 멀티 라벨 태그 배지 렌더링
+      // 궤적이 동일하고 분리 뷰가 아닌 경우: 동심원 링 결합 모드
+      const baseProps = this.trajectoriesData[0];
+      const currentT = Math.min(this.currentTime, baseProps.totalTime);
+      const isCompleted = this.currentTime >= baseProps.totalTime;
+
       const sortedByMassDesc = [...this.trajectoriesData].sort((a, b) => b.mass - a.mass);
       const currentPos = PhysicsEngine.getPositionAtTime(baseProps, currentT);
       const scrPos = this.worldToScreen(currentPos.x, currentPos.y, 0);
 
-      // 바깥 링부터 순차적으로 그림
       sortedByMassDesc.forEach((props, rank) => {
-        const radius = 22 - rank * 3.5; // 계층별 링 반경
+        const radius = 22 - rank * 3.5;
         ctx.save();
         ctx.translate(scrPos.x, scrPos.y);
 
-        // 글로우 효과
         ctx.shadowColor = props.color.glow;
         ctx.shadowBlur = 10;
 
-        // 원형 테두리 링
         ctx.strokeStyle = props.color.hex;
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(0, 0, Math.max(6, radius), 0, Math.PI * 2);
         ctx.stroke();
 
-        // 가장 안쪽 코어는 채우기
         if (rank === sortedByMassDesc.length - 1) {
           ctx.fillStyle = props.color.hex;
           ctx.beginPath();
@@ -371,10 +388,8 @@ export class SimulationCanvas {
         ctx.restore();
       });
 
-      // 투사체 상단에 일목요연한 멀티 태그 뱃지 카드 렌더링 (시인성 극대화)
       this.drawMergedMultiTagBadge(ctx, scrPos, this.trajectoriesData);
 
-      // 속도 벡터 화살표
       if (this.showVectors && !isCompleted && this.isRunning) {
         this.drawVectors(ctx, scrPos, currentPos.vx, currentPos.vy);
       }
@@ -400,11 +415,11 @@ export class SimulationCanvas {
     ctx.textBaseline = 'middle';
     ctx.fillText(`${props.id}`, 0, 0);
 
-    // 질량 태그 라벨
+    // 각도, 속도 또는 질량 태그 라벨
     ctx.fillStyle = props.color.hex;
     ctx.font = 'bold 10px monospace';
     const massStr = props.mass >= 1000 ? `${(props.mass/1000).toFixed(1)}kg` : `${props.mass}g`;
-    ctx.fillText(`#${props.id} (${massStr})`, 0, -16);
+    ctx.fillText(`#${props.id} (${props.angleDeg}°, ${props.v0}m/s, ${massStr})`, 0, -16);
 
     ctx.restore();
 
@@ -415,16 +430,13 @@ export class SimulationCanvas {
 
   drawMergedMultiTagBadge(ctx, scrPos, list) {
     ctx.save();
-    // 뱃지 상자 위치 계산
     const badgeY = scrPos.y - 28;
     const badgeX = scrPos.x;
 
-    // 투사체 미니 인디케이터 배지들 가로 배열
     const itemWidth = 54;
     const totalWidth = list.length * itemWidth + 8;
     const startX = badgeX - totalWidth / 2;
 
-    // 배경 카드
     ctx.fillStyle = 'rgba(11, 15, 25, 0.85)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1;
@@ -433,17 +445,14 @@ export class SimulationCanvas {
     ctx.fill();
     ctx.stroke();
 
-    // 개별 투사체 칩 출력
     list.forEach((p, i) => {
       const chipX = startX + 6 + i * itemWidth;
       
-      // 컬러 도트
       ctx.fillStyle = p.color.hex;
       ctx.beginPath();
       ctx.arc(chipX + 4, badgeY - 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // 라벨 (#1 10g 등)
       ctx.fillStyle = '#f8fafc';
       ctx.font = 'bold 9px Pretendard, monospace';
       ctx.textAlign = 'left';

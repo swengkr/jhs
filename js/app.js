@@ -9,10 +9,18 @@ import { COLORS, PhysicsEngine } from './physics.js';
 class App {
   constructor() {
     this.numProjectiles = 3;
-    this.launchAngle = 45;
-    this.initialVelocity = 25;
+    this.globalLaunchAngle = 45;
+    this.globalInitialVelocity = 25;
     this.gravity = 9.8;
-    this.masses = [10, 500, 5000, 200, 2000]; // 투사체별 기본 질량 (g)
+
+    // 투사체별 개별 파라미터 (최대 5개 기본값 설정)
+    this.projectilesConfig = [
+      { angle: 45, v0: 25, mass: 10 },
+      { angle: 45, v0: 25, mass: 500 },
+      { angle: 45, v0: 25, mass: 5000 },
+      { angle: 30, v0: 25, mass: 200 },
+      { angle: 60, v0: 30, mass: 2000 }
+    ];
 
     this.introAnimation = null;
     this.simCanvas = null;
@@ -52,51 +60,19 @@ class App {
 
   renderKaTeXFormulas() {
     if (window.katex) {
-      // 인트로 자유낙하 가속도 유도
-      katex.render(
-        String.raw`F = m \cdot a = m \cdot g \implies a = g`,
-        document.getElementById('intro-math-eq'),
-        { throwOnError: false, displayMode: true }
-      );
-
-      // 매개변수 방정식 x(t), y(t)
-      katex.render(
-        String.raw`x(t) = (v_0 \cos\theta) \cdot t`,
-        document.getElementById('eq-x-t'),
-        { throwOnError: false, displayMode: true }
-      );
-      katex.render(
-        String.raw`y(t) = (v_0 \sin\theta) \cdot t - \frac{1}{2}gt^2`,
-        document.getElementById('eq-y-t'),
-        { throwOnError: false, displayMode: true }
-      );
-
-      // 이차함수 궤적 방정식
-      katex.render(
-        String.raw`y = \left(\tan\theta\right)x - \left(\frac{g}{2v_0^2\cos^2\theta}\right)x^2 = ax^2 + bx`,
-        document.getElementById('eq-trajectory'),
-        { throwOnError: false, displayMode: true }
-      );
-
-      // 특징 분석 (꼭짓점 & x절편)
-      katex.render(
-        String.raw`\text{최고점: } \left( \frac{v_0^2\sin 2\theta}{2g}, \frac{v_0^2\sin^2\theta}{2g} \right), \quad \text{수평 도달거리: } R = \frac{v_0^2\sin 2\theta}{g}`,
-        document.getElementById('eq-features'),
-        { throwOnError: false, displayMode: true }
-      );
+      const introEq = document.getElementById('intro-math-eq');
+      if (introEq) {
+        katex.render(
+          String.raw`F = m \cdot a = m \cdot g \implies a = g`,
+          introEq,
+          { throwOnError: false, displayMode: true }
+        );
+      }
     }
   }
 
-  getProjectilesConfig() {
-    const configs = [];
-    for (let i = 0; i < this.numProjectiles; i++) {
-      configs.push({
-        angle: this.launchAngle,
-        v0: this.initialVelocity,
-        mass: this.masses[i] !== undefined ? this.masses[i] : 100 * (i + 1)
-      });
-    }
-    return configs;
+  getActiveProjectilesConfig() {
+    return this.projectilesConfig.slice(0, this.numProjectiles);
   }
 
   renderProjectileCards() {
@@ -105,8 +81,8 @@ class App {
 
     for (let idx = 0; idx < this.numProjectiles; idx++) {
       const color = COLORS[idx % COLORS.length];
-      const mass = this.masses[idx] !== undefined ? this.masses[idx] : 100 * (idx + 1);
-      this.masses[idx] = mass;
+      const cfg = this.projectilesConfig[idx] || { angle: 45, v0: 25, mass: 100 * (idx + 1) };
+      this.projectilesConfig[idx] = cfg;
 
       const card = document.createElement('div');
       card.className = 'proj-card';
@@ -121,34 +97,81 @@ class App {
           <span style="font-size:0.75rem; color:#94a3b8">${color.name}</span>
         </div>
         <div class="proj-fields">
+          <!-- 발사각 (θ) -->
           <div class="field-row">
-            <span class="field-label">공통 발사각:</span>
-            <span style="font-family:var(--font-mono); color:#38bdf8; font-weight:600">${this.launchAngle}°</span>
+            <span class="field-label">개별 발사각 (θ):</span>
+            <div class="slider-input-pair">
+              <input type="range" class="proj-slider-angle" data-idx="${idx}" min="5" max="85" value="${cfg.angle}" step="1">
+              <input type="number" class="proj-input-angle" data-idx="${idx}" min="5" max="85" value="${cfg.angle}">
+              <span class="unit">°</span>
+            </div>
           </div>
+
+          <!-- 초기속도 (v₀) -->
           <div class="field-row">
-            <span class="field-label">공통 초기속도:</span>
-            <span style="font-family:var(--font-mono); color:#38bdf8; font-weight:600">${this.initialVelocity} m/s</span>
+            <span class="field-label">개별 초기속도 (v₀):</span>
+            <div class="slider-input-pair">
+              <input type="range" class="proj-slider-v0" data-idx="${idx}" min="5" max="60" value="${cfg.v0}" step="1">
+              <input type="number" class="proj-input-v0" data-idx="${idx}" min="5" max="60" value="${cfg.v0}">
+              <span class="unit">m/s</span>
+            </div>
           </div>
+
+          <!-- 질량 (m) -->
           <div class="field-row">
             <span class="field-label">개별 질량 (m):</span>
-            <input type="range" class="proj-slider" data-idx="${idx}" min="1" max="10000" value="${mass}" step="10">
-            <input type="number" class="proj-input" data-idx="${idx}" min="1" max="10000" value="${mass}">
-            <span class="unit">g</span>
+            <div class="slider-input-pair">
+              <input type="range" class="proj-slider-mass" data-idx="${idx}" min="1" max="10000" value="${cfg.mass}" step="10">
+              <input type="number" class="proj-input-mass" data-idx="${idx}" min="1" max="10000" value="${cfg.mass}">
+              <span class="unit">g</span>
+            </div>
           </div>
         </div>
       `;
       container.appendChild(card);
     }
 
-    // 개별 질량 입력 이벤트 바인딩
-    container.querySelectorAll('.proj-slider, .proj-input').forEach(input => {
+    // 1. 각도 조절 바인딩
+    container.querySelectorAll('.proj-slider-angle, .proj-input-angle').forEach(input => {
       input.addEventListener('input', (e) => {
         const idx = parseInt(e.target.dataset.idx, 10);
-        const val = parseFloat(e.target.value) || 1;
-        this.masses[idx] = val;
+        const val = Math.min(85, Math.max(5, parseFloat(e.target.value) || 5));
+        this.projectilesConfig[idx].angle = val;
 
         const partner = container.querySelector(
-          `${e.target.tagName === 'INPUT' && e.target.type === 'range' ? '.proj-input' : '.proj-slider'}[data-idx="${idx}"]`
+          `${e.target.tagName === 'INPUT' && e.target.type === 'range' ? '.proj-input-angle' : '.proj-slider-angle'}[data-idx="${idx}"]`
+        );
+        if (partner) partner.value = val;
+
+        this.syncSimulation();
+      });
+    });
+
+    // 2. 초기속도 조절 바인딩
+    container.querySelectorAll('.proj-slider-v0, .proj-input-v0').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        const val = Math.min(60, Math.max(5, parseFloat(e.target.value) || 5));
+        this.projectilesConfig[idx].v0 = val;
+
+        const partner = container.querySelector(
+          `${e.target.tagName === 'INPUT' && e.target.type === 'range' ? '.proj-input-v0' : '.proj-slider-v0'}[data-idx="${idx}"]`
+        );
+        if (partner) partner.value = val;
+
+        this.syncSimulation();
+      });
+    });
+
+    // 3. 질량 조절 바인딩
+    container.querySelectorAll('.proj-slider-mass, .proj-input-mass').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        const val = Math.min(10000, Math.max(1, parseFloat(e.target.value) || 1));
+        this.projectilesConfig[idx].mass = val;
+
+        const partner = container.querySelector(
+          `${e.target.tagName === 'INPUT' && e.target.type === 'range' ? '.proj-input-mass' : '.proj-slider-mass'}[data-idx="${idx}"]`
         );
         if (partner) partner.value = val;
 
@@ -159,7 +182,7 @@ class App {
 
   syncSimulation() {
     this.gravity = parseFloat(document.getElementById('selectGravity').value) || 9.8;
-    const configList = this.getProjectilesConfig();
+    const configList = this.getActiveProjectilesConfig();
     this.simCanvas.setProjectiles(configList, this.gravity);
     this.mathGraph.updateGraph(this.simCanvas.trajectoriesData);
     this.renderResultsTable();
@@ -172,8 +195,21 @@ class App {
     const list = this.simCanvas.trajectoriesData;
     if (!list.length) return;
 
+    const base = list[0];
+
     list.forEach((p) => {
       const tr = document.createElement('tr');
+      const isAngleSame = Math.abs(p.angleDeg - base.angleDeg) < 0.001;
+      const isV0Same = Math.abs(p.v0 - base.v0) < 0.001;
+      const isTrajSame = isAngleSame && isV0Same;
+
+      let badgeHtml = '';
+      if (isTrajSame) {
+        badgeHtml = `<span class="match-badge match-same">✓ 궤적 일치 (질량 무관)</span>`;
+      } else {
+        badgeHtml = `<span class="match-badge match-diff">⚡ 독립 궤적 (조건 차이)</span>`;
+      }
+
       tr.innerHTML = `
         <td style="color:${p.color.hex}; font-weight:700">#${p.id}</td>
         <td>${p.angleDeg}°</td>
@@ -182,44 +218,48 @@ class App {
         <td>${p.maxHeight.toFixed(2)} m</td>
         <td>${p.range.toFixed(2)} m</td>
         <td>${p.totalTime.toFixed(2)} s</td>
-        <td>
-          <span class="match-badge match-same">
-            ✓ 궤적 100% 일치 (동일)
-          </span>
-        </td>
+        <td>${badgeHtml}</td>
       `;
       tbody.appendChild(tr);
     });
   }
 
   bindEvents() {
-    // 1. 공통 발사각 변경
+    // 1. 공통 일괄 발사각 변경
     const sliderAngle = document.getElementById('sliderLaunchAngle');
     const inputAngle = document.getElementById('inputLaunchAngle');
-    const handleAngleChange = (val) => {
+    const handleGlobalAngleChange = (val) => {
       const angle = Math.min(85, Math.max(5, parseFloat(val) || 45));
       sliderAngle.value = angle;
       inputAngle.value = angle;
-      this.launchAngle = angle;
+      this.globalLaunchAngle = angle;
+      // 모든 투사체에 일괄 적용
+      for (let i = 0; i < this.projectilesConfig.length; i++) {
+        this.projectilesConfig[i].angle = angle;
+      }
       this.renderProjectileCards();
       this.syncSimulation();
     };
-    sliderAngle.addEventListener('input', (e) => handleAngleChange(e.target.value));
-    inputAngle.addEventListener('change', (e) => handleAngleChange(e.target.value));
+    sliderAngle.addEventListener('input', (e) => handleGlobalAngleChange(e.target.value));
+    inputAngle.addEventListener('change', (e) => handleGlobalAngleChange(e.target.value));
 
-    // 2. 공통 초기속도 변경
+    // 2. 공통 일괄 초기속도 변경
     const sliderVel = document.getElementById('sliderInitialVelocity');
     const inputVel = document.getElementById('inputInitialVelocity');
-    const handleVelChange = (val) => {
+    const handleGlobalVelChange = (val) => {
       const v0 = Math.min(60, Math.max(5, parseFloat(val) || 25));
       sliderVel.value = v0;
       inputVel.value = v0;
-      this.initialVelocity = v0;
+      this.globalInitialVelocity = v0;
+      // 모든 투사체에 일괄 적용
+      for (let i = 0; i < this.projectilesConfig.length; i++) {
+        this.projectilesConfig[i].v0 = v0;
+      }
       this.renderProjectileCards();
       this.syncSimulation();
     };
-    sliderVel.addEventListener('input', (e) => handleVelChange(e.target.value));
-    inputVel.addEventListener('change', (e) => handleVelChange(e.target.value));
+    sliderVel.addEventListener('input', (e) => handleGlobalVelChange(e.target.value));
+    inputVel.addEventListener('change', (e) => handleGlobalVelChange(e.target.value));
 
     // 3. 투사체 수 변경
     const sliderCount = document.getElementById('sliderNumProjectiles');
@@ -240,7 +280,7 @@ class App {
       this.syncSimulation();
     });
 
-    // 4. 발사 / 일시정지 / 리셋 컨트롤
+    // 5. 발사 / 일시정지 / 리셋 컨트롤
     const btnLaunch = document.getElementById('btnLaunch');
     const btnPause = document.getElementById('btnPause');
     const btnReset = document.getElementById('btnReset');
@@ -269,7 +309,7 @@ class App {
       this.simCanvas.reset();
     });
 
-    // 5. 시뮬레이션 배속 설정
+    // 6. 시뮬레이션 배속 설정
     document.querySelectorAll('.btn-speed').forEach(btn => {
       btn.addEventListener('click', (e) => {
         document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
@@ -279,7 +319,7 @@ class App {
       });
     });
 
-    // 6. 뷰 옵션 토글
+    // 7. 뷰 옵션 토글
     document.getElementById('toggleSplitView').addEventListener('change', (e) => {
       this.simCanvas.splitView = e.target.checked;
       this.simCanvas.render();
@@ -300,7 +340,7 @@ class App {
       this.simCanvas.render();
     });
 
-    // 7. 인트로 자유낙하 컨트롤
+    // 8. 인트로 자유낙하 컨트롤
     const btnSlowIntro = document.getElementById('btnToggleSlowIntro');
     btnSlowIntro.addEventListener('click', () => {
       const isSlow = this.introAnimation.toggleSlow();

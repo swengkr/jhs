@@ -69,16 +69,16 @@
           <h2>포물선 운동 시뮬레이션 파라미터 설정</h2>
         </div>
         <span class="tag" style="background: rgba(6, 182, 212, 0.18); color: #38bdf8; border-color: rgba(6, 182, 212, 0.35);">
-          모든 투사체 공통 각도 & 속도 적용
+          개별 투사체 각도 · 속도 · 질량 자유 조절
         </span>
       </div>
 
       <div class="config-panel">
-        <!-- 공통 파라미터 영역 (발사각, 초기속도, 투사체 수, 중력) -->
+        <!-- 공통 일괄 설정 영역 (발사각, 초기속도, 투사체 수, 중력) -->
         <div class="global-inputs">
           <div class="input-group">
             <label for="inputLaunchAngle">
-              <strong>공통 발사각 (θ)</strong>
+              <strong>일괄 발사각 적용 (θ)</strong>
               <span class="hint">(5° ~ 85°)</span>
             </label>
             <div class="slider-input-pair">
@@ -90,7 +90,7 @@
 
           <div class="input-group">
             <label for="inputInitialVelocity">
-              <strong>공통 초기속도 (v₀)</strong>
+              <strong>일괄 초기속도 적용 (v₀)</strong>
               <span class="hint">(5 ~ 60 m/s)</span>
             </label>
             <div class="slider-input-pair">
@@ -125,13 +125,13 @@
           </div>
         </div>
 
-        <!-- 각 투사체별 질량(m) 설정 카드 컨테이너 -->
+        <!-- 각 투사체별 개별 설정 카드 컨테이너 -->
         <div class="projectiles-section-header">
-          <h3>⚖️ 투사체별 질량(m) 개별 설정 (서로 다른 질량 비교)</h3>
-          <span class="sub-hint">질량이 완전히 달라도 궤적과 비행 시간이 동일함을 직접 확인해 보세요!</span>
+          <h3>🎯 투사체별 개별 파라미터 설정 (발사각 θ / 초기속도 v₀ / 질량 m)</h3>
+          <span class="sub-hint">각 투사체의 발사각과 초기속도를 다르게 설정하여 다양한 포물선 궤적을 비교해 보세요!</span>
         </div>
         <div class="projectiles-container" id="projectilesCardsContainer">
-          <!-- JS로 투사체 질량 카드 렌더링 -->
+          <!-- JS로 개별 투사체 설정 카드 렌더링 -->
         </div>
 
         <div class="action-bar">
@@ -160,7 +160,7 @@
       <div class="section-header">
         <div class="section-title">
           <span class="icon">🎯</span>
-          <h2>실시간 포물선 비행 시뮬레이션</h2>
+          <h2>실시간 포물선 비행 시뮬레이션 (진공 챔버)</h2>
         </div>
         <div class="canvas-toggles">
           <label class="toggle-label mode-badge-label">
@@ -214,26 +214,20 @@
 
       <div class="math-grid">
         <div class="math-derivations">
-          <div class="formula-box">
-            <h3>1. 시간(<em>t</em>)에 대한 매개변수 위치 방정식</h3>
-            <p>수평 방향 (등속도 운동 <em>a<sub>x</sub> = 0</em>):</p>
-            <div id="eq-x-t" class="katex-eq"></div>
-            <p>수직 방향 (등가속도 운동 <em>a<sub>y</sub> = -g</em>):</p>
-            <div id="eq-y-t" class="katex-eq"></div>
-          </div>
-
-          <div class="formula-box highlight-box">
-            <h3>2. 시간(<em>t</em>) 소거 → 궤적의 이차함수 방정식</h3>
-            <p><em>t = x / (v₀ cosθ)</em> 를 수직 위치 식에 대입하면:</p>
-            <div id="eq-trajectory" class="katex-eq"></div>
-            <div class="math-insight">
-              <p>🔍 <strong>핵심 발견:</strong> 위 유도식에 <strong>질량(<em>m</em>) 항이 전혀 존재하지 않습니다!</strong><br>즉, 질량이 10g이든 5,000g이든 발사각(<em>θ</em>)과 초기속도(<em>v₀</em>)가 같다면 <strong>완벽히 동일한 이차함수 궤적</strong>을 그립니다.</p>
+          <!-- 진공 상태 및 독립 운동 원리 안내 박스 -->
+          <div class="vacuum-banner">
+            <div class="vacuum-title">
+              <span class="vacuum-icon">🌌</span>
+              <strong>진공 상태(공기 저항이 없는 환경)에서의 포물선 운동 원리</strong>
             </div>
-          </div>
-
-          <div class="formula-box">
-            <h3>3. 이차함수 특징 분석 (꼭짓점과 <em>x</em>절편)</h3>
-            <div id="eq-features" class="katex-eq"></div>
+            <p class="vacuum-desc">
+              포물선 운동 시 공기 저항이 없는 <strong>진공 상태</strong>에서는 
+              <strong>수평 방향</strong>으로는 아무런 힘이 작용하지 않아 일정한 속도로 움직이는 <strong>등속도 운동</strong>을 하고, 
+              <strong>수직 방향</strong>으로는 아래쪽으로 일정한 중력가속도(<em>g</em>)가 작용해 속도가 계속 변하는 <strong>등가속도 운동</strong>을 합니다.
+            </p>
+            <div class="vacuum-highlight">
+              💡 <strong>운동의 독립성 & 포물선 형성:</strong> 수평 운동과 수직 운동은 서로 영향을 주지 않고 <strong>독립적으로 동시에 발생</strong>하기 때문에, 두 운동이 결합되어 수학적으로 <strong>포물선(이차함수 곡선 $y=ax^2+bx$)</strong> 형태를 이룹니다.
+            </div>
           </div>
         </div>
 
@@ -256,7 +250,7 @@
   <footer class="app-footer">
     <div class="footer-content">
       <p>🎓 <strong>고등학교 물리 I & 수학 I 연계 시뮬레이션</strong> | Render Static Hosting 호환</p>
-      <p class="copyright">Developed for intuitive Physics & Mathematics education.</p>
+      <p class="copyright">Copyright © 2026 정혜수. All rights reserved.</p>
     </div>
   </footer>
 
